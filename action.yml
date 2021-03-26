@@ -1,0 +1,23 @@
+name: iContact Update
+description: Composite action to update iContact templates
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout changes
+      uses: actions/checkout@v2
+
+    - name: Replace previous templates
+      run: |
+        sudo rm -rf /var/cpanel/templates/icontact_templates
+        sudo sh -c "[ -d ${TEMPLATE_DIR} ] || mkdir -p ${TEMPLATE_DIR}"
+        sudo git -c advice.detachedHead=false --git-dir=${GITHUB_WORKSPACE}/.git --work-tree=${TEMPLATE_DIR} checkout -f ${GITHUB_REF}
+
+    - name: Run iContact.pm mod
+      run: sudo ${TEMPLATE_DIR}/_scripts/update-mail
+
+    - name: Clean up directory
+      run: |
+        sudo rm -rf ${TEMPLATE_DIR}/.github
+        sudo rm -rf ${TEMPLATE_DIR}/_scripts
+        sudo rm -rf ${TEMPLATE_DIR}/_tests
